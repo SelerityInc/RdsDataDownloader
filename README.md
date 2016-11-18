@@ -16,17 +16,17 @@ Downloads data from RDS and stores it to disk.
   to `conf/application.properties`.
 * Change `YOUR_USER` to your user name
 * Change `YOUR_PASSWORD` to your password
-* Get the `jar` of `RdsDataDownloader` that you want to run (either by coning this repo and running `mvn package`
+* Get the `jar` of `RdsDataDownloader` that you want to run (either by cloning this repo and running `mvn package`
   or fetch it from [Maven Central](https://repo1.maven.org/maven2/com/seleritycorp/rds/downloader/RdsDataDownloader)
   and store it into that directory.
 * Run `java -jar RdsDataDownloader-1.0.0.jar` (update the version number accordingly)
 
 `RdsDataDownloader` will download fresh RDS data and persist them to `data/rds/rds-data.json` every hour.
-This file gets it's data atomically, so other processes can read from it all them time.
+This file gets it's data atomically, so other processes can read from it all the time.
 
 ## Configuration Settings
 
-* `CoreServices.url` The url to connect for Selerity's CoreServices. Typically, https://api-alt.seleritycorp.com
+* `CoreServices.url` The url to connect for Selerity's CoreServices. 
 * `CoreServices.user` The user used for CoreService authentication.
 * `CoreServices.password` The password used for CoreService authentication.
 * `RdsDataDownloader.fetcher.enumTypes` The Reference data `enumTypes` to fetch data for. E.g.: `PUBLIC_COMPANY` for
