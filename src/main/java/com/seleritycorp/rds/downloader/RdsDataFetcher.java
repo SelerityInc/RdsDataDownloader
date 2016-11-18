@@ -60,7 +60,7 @@ public class RdsDataFetcher {
   /**
    * Fetches RDS data.
    * 
-   * <p>If fetching fails, no re-tries are done. 
+   * <p>If fetching fails, no re-tries are done.
    * 
    * @return the fetched data
    * @throws IOException for network or other IO issues occur.

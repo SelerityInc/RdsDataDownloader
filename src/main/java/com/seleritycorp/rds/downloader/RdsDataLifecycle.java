@@ -61,9 +61,9 @@ public class RdsDataLifecycle {
    * <p>The handler is initially stopped. You have to call {@link #start()} to acutally start the
    * handler's scheduling.
    * 
-   * @param sm The application's state manager to report to 
+   * @param sm The application's state manager to report to
    * @param appConfig The application config to use.
-   * @param fetcher handler of single, plain fetches 
+   * @param fetcher handler of single, plain fetches
    * @param persister persister of RDS data
    * @param timeUtils timing for fetch re-tries.
    */

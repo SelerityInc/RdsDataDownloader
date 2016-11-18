@@ -52,7 +52,7 @@ public class RdsDataPersister {
    * Creates a persister for RDS data.
    * 
    * @param appConfig The application config to use.
-   * @param appPaths The base paths to write data to.  
+   * @param appPaths The base paths to write data to.
    */
   @Inject
   public RdsDataPersister(@ApplicationConfig Config appConfig, ApplicationPaths appPaths) {
@@ -60,7 +60,7 @@ public class RdsDataPersister {
 
     this.target = appPaths.getDataPath().resolve(config.get("target", "rds/rds-data.json"));
     this.targetParent = target.getParent();
-    
+
     if (config.get("tmpTarget") == null) {
       if (this.targetParent == null) {
         this.tmpTarget = Paths.get(this.target.getFileName() + ".tmp");
