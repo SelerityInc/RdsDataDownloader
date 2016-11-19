@@ -26,7 +26,7 @@
 
   <name>Rds Data Downloader</name>
   <description>Automatic downloading of Rds data</description>
-  <url>https://github.com/seleritycorp/${project.artifactId}</url>
+  <url>https://github.com/SelerityInc/${project.artifactId}</url>
   <inceptionYear>2016</inceptionYear>
 
   <organization>
@@ -52,10 +52,10 @@
   </developers>
 
   <scm>
-    <connection>scm:git:github.com:seleritycorp/${project.artifactId}.git</connection>
-    <developerConnection>scm:git:git@github.com:seleritycorp/${project.artifactId}.git</developerConnection>
+    <connection>scm:git:github.com:SelerityInc/${project.artifactId}.git</connection>
+    <developerConnection>scm:git:git@github.com:SelerityInc/${project.artifactId}.git</developerConnection>
     <tag>HEAD</tag>
-    <url>https://github.com/seleritycorp/${project.artifactId}</url>
+    <url>https://github.com/SelerityInc/${project.artifactId}</url>
   </scm>
 
   <distributionManagement>
