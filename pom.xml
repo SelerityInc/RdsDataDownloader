@@ -186,6 +186,13 @@
         <filtering>true</filtering>
         <directory>${project.basedir}/src/main/resources/jar-info</directory>
       </resource>
+
+      <!-- build information for the main application itself -->
+      <resource>
+        <targetPath>META-INF/main-application</targetPath>
+        <filtering>true</filtering>
+        <directory>${project.basedir}/src/main/resources/jar-info</directory>
+      </resource>
     </resources>
 
     <pluginManagement>
