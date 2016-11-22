@@ -30,7 +30,7 @@ import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.seleritycorp.common.base.config.ApplicationPaths;
 import com.seleritycorp.common.base.config.Config;
 import com.seleritycorp.common.base.test.FileTestCase;
@@ -59,9 +59,16 @@ public class RdsDataPersisterTest extends FileTestCase {
 
   @Test
   public void testPersistOk() throws IOException {
-    JsonArray rdsData = new JsonArray();
-    rdsData.add(42);
-    rdsData.add("foo");
+    JsonObject meta = new JsonObject();
+    meta.addProperty("version", 2);
+
+    JsonObject data = new JsonObject();
+    data.addProperty("foo", 42);
+    data.addProperty("bar", "baz");
+
+    JsonObject rdsData = new JsonObject();
+    rdsData.add("meta", meta);
+    rdsData.add("data", data);
 
     replayAll();
 
@@ -70,13 +77,14 @@ public class RdsDataPersisterTest extends FileTestCase {
 
     verifyAll();
 
-    assertThat(defaultTarget).hasContent("[42,\"foo\"]");
+    assertThat(defaultTarget)
+        .hasContent("{\"meta\":{\"version\":2},\"data\":{\"foo\":42,\"bar\":\"baz\"}}");
     assertThat(defaultTmpTarget).doesNotExist();
   }
 
   @Test
   public void testPersistTmpTargetParentIsFile() throws IOException {
-    JsonArray rdsData = new JsonArray();
+    JsonObject rdsData = new JsonObject();
 
     Files.createFile(defaultTmpTarget.getParent());
 
@@ -96,7 +104,7 @@ public class RdsDataPersisterTest extends FileTestCase {
 
   @Test
   public void testPersistTmpTargetIsDirectory() throws IOException {
-    JsonArray rdsData = new JsonArray();
+    JsonObject rdsData = new JsonObject();
 
     Files.createDirectories(defaultTmpTarget.getParent());
     Files.createDirectories(defaultTmpTarget);
@@ -117,7 +125,7 @@ public class RdsDataPersisterTest extends FileTestCase {
 
   @Test
   public void testPersistTargetParentIsFile() throws IOException {
-    JsonArray rdsData = new JsonArray();
+    JsonObject rdsData = new JsonObject();
 
     Files.createFile(defaultTarget.getParent());
 
@@ -137,7 +145,7 @@ public class RdsDataPersisterTest extends FileTestCase {
 
   @Test
   public void testPersistTargetIsDirectory() throws IOException {
-    JsonArray rdsData = new JsonArray();
+    JsonObject rdsData = new JsonObject();
 
     Files.createDirectories(defaultTarget.getParent());
     Files.createDirectories(defaultTarget);
@@ -158,7 +166,7 @@ public class RdsDataPersisterTest extends FileTestCase {
 
   @Test
   public void testPersistOverwriting() throws IOException {
-    JsonArray rdsData = new JsonArray();
+    JsonObject rdsData = new JsonObject();
 
     Files.createDirectories(defaultTmpTarget.getParent());
     Files.write(defaultTmpTarget, "foo".getBytes(StandardCharsets.UTF_8));
@@ -178,7 +186,7 @@ public class RdsDataPersisterTest extends FileTestCase {
 
     verifyAll();
 
-    assertThat(defaultTarget).hasContent("[]");
+    assertThat(defaultTarget).hasContent("{}");
     assertThat(defaultTmpTarget).doesNotExist();
   }
 

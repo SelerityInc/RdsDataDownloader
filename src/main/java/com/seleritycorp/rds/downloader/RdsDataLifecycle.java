@@ -16,7 +16,7 @@
 
 package com.seleritycorp.rds.downloader;
 
-import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import com.seleritycorp.common.base.config.ApplicationConfig;
 import com.seleritycorp.common.base.config.Config;
@@ -85,8 +85,8 @@ public class RdsDataLifecycle {
    * 
    * @return The fetched RDS data. null, if RDS could not get fetched.
    */
-  private JsonArray fetch() {
-    JsonArray rdsData = null;
+  private JsonObject fetch() {
+    JsonObject rdsData = null;
     try {
       rdsData = fetcher.fetch();
     } catch (IOException | CallErrorException e2) {
@@ -112,7 +112,7 @@ public class RdsDataLifecycle {
   private void singleRun() {
     log.info("Starting data fetch run");
     try {
-      JsonArray rdsData = fetch();
+      JsonObject rdsData = fetch();
 
       if (rdsData == null) {
         facet.setAppState(AppState.FAULTY, "Failed to receive good RDS data");

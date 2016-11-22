@@ -16,7 +16,7 @@
 
 package com.seleritycorp.rds.downloader;
 
-import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import com.seleritycorp.common.base.config.ApplicationConfig;
 import com.seleritycorp.common.base.config.ApplicationPaths;
@@ -79,7 +79,7 @@ public class RdsDataPersister {
    * @param rdsData the data to persist
    * @throws IOException for errors while persisting.
    */
-  public void persist(JsonArray rdsData) throws IOException {
+  public void persist(JsonObject rdsData) throws IOException {
     log.info("Persisting RDS data to " + target);
 
     // If we'd write to the target directly, another process might try to read the file while we

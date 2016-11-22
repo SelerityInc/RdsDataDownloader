@@ -26,7 +26,7 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.inject.Injector;
 import com.seleritycorp.common.base.coreservices.CallErrorException;
 import com.seleritycorp.common.base.inject.InjectorFactory;
@@ -62,7 +62,7 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
 
   @Test
   public void testInitialRun() throws IOException, CallErrorException {
-    JsonArray rdsData = new JsonArray();
+    JsonObject rdsData = new JsonObject();
 
     expect(fetcher.fetch()).andReturn(rdsData);
     persister.persist(rdsData);
@@ -86,7 +86,7 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
 
   @Test
   public void testPlainScheduling() throws IOException, CallErrorException {
-    JsonArray rdsData = new JsonArray();
+    JsonObject rdsData = new JsonObject();
 
     expect(fetcher.fetch()).andReturn(rdsData).times(4, 7);
     persister.persist(rdsData);
@@ -109,7 +109,7 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
 
   @Test
   public void testFailingFetchThenRecovery() throws IOException, CallErrorException {
-    JsonArray rdsData = new JsonArray();
+    JsonObject rdsData = new JsonObject();
 
     expect(fetcher.fetch()).andReturn(null).times(2);
     expect(fetcher.fetch()).andReturn(rdsData).times(2, 5);
@@ -137,7 +137,7 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
   public void testFetchRetry() throws IOException, CallErrorException {
     CallErrorException thrownE = new CallErrorException("catch me");
 
-    JsonArray rdsData = new JsonArray();
+    JsonObject rdsData = new JsonObject();
 
     expect(fetcher.fetch()).andThrow(thrownE);
     expect(fetcher.fetch()).andReturn(rdsData);

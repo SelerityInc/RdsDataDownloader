@@ -16,7 +16,6 @@
 
 package com.seleritycorp.rds.downloader;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -24,6 +23,7 @@ import com.seleritycorp.common.base.config.ApplicationConfig;
 import com.seleritycorp.common.base.config.Config;
 import com.seleritycorp.common.base.coreservices.CallErrorException;
 import com.seleritycorp.common.base.coreservices.RefDataClient;
+import com.seleritycorp.common.base.meta.MetaDataFormatter;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -36,16 +36,20 @@ import javax.inject.Inject;
 public class RdsDataFetcher {
   private final RefDataClient refDataClient;
   private final List<String> enumTypes;
+  private final String agent;
 
   /**
    * Creates a fetcher of RDS data.
    * 
    * @param appConfig The application config to use.
    * @param refDataClient The CoreService client for reference data.
+   * @param metaDataFormatter formats the agent for meta data. 
    */
   @Inject
-  public RdsDataFetcher(@ApplicationConfig Config appConfig, RefDataClient refDataClient) {
+  public RdsDataFetcher(@ApplicationConfig Config appConfig, RefDataClient refDataClient,
+      MetaDataFormatter metaDataFormatter) {
     this.refDataClient = refDataClient;
+    this.agent = metaDataFormatter.getUserAgent();
     String enumTypesString = appConfig.get("RdsDataDownloader.fetcher.enumTypes", "");
 
     this.enumTypes = new LinkedList<>();
@@ -66,15 +70,20 @@ public class RdsDataFetcher {
    * @throws IOException for network or other IO issues occur.
    * @throws CallErrorException for server and semantics errors.
    */
-  public JsonArray fetch() throws IOException, CallErrorException {
-    JsonArray ret = new JsonArray();
+  public JsonObject fetch() throws IOException, CallErrorException {
+    JsonObject meta = new JsonObject();
+    meta.addProperty("format", "RdsData");
+    meta.addProperty("version", 2);
+    meta.addProperty("agent", agent);
+
+    JsonObject ret = new JsonObject();
+    ret.add("meta", meta);
+
+    JsonObject data = new JsonObject();
+    ret.add("data", data);
     for (String enumType : enumTypes) {
       JsonElement identifiers = refDataClient.getIdentifiersForEnumType(enumType);
-
-      JsonObject wrappedIdentifiers = new JsonObject();
-      wrappedIdentifiers.add(enumType, identifiers);
-
-      ret.add(wrappedIdentifiers);
+      data.add(enumType, identifiers);
     }
     return ret;
   }
