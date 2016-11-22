@@ -47,8 +47,7 @@ public class RdsDataLifecycle {
 
   private final AppStatePushFacet facet;
 
-  private final int interval;
-  private final TimeUnit intervalUnit;
+  private final long intervalMillis;
   private final RdsDataFetcher fetcher;
   private final RdsDataPersister persister;
   private final TimeUtils timeUtils;
@@ -78,8 +77,7 @@ public class RdsDataLifecycle {
     this.retryPauseMillis = 3 * 60 * 1000;
 
     Config config = ConfigUtils.subconfig(appConfig, "RdsDataDownloader.lifecycle");
-    this.interval = config.getInt("interval", 3600);
-    this.intervalUnit = TimeUnit.valueOf(config.get("intervalUnit", "SECONDS"));
+    this.intervalMillis = config.getDurationMillis("interval", 3600, TimeUnit.SECONDS);
   }
 
   /**
@@ -151,8 +149,8 @@ public class RdsDataLifecycle {
         return thread;
       }
     });
-    executorService.scheduleAtFixedRate(runnable, 0, interval, intervalUnit);
-    log.info("Scheduled RDS data downloads every " + interval + " " + intervalUnit);
+    executorService.scheduleAtFixedRate(runnable, 0, intervalMillis, TimeUnit.MILLISECONDS);
+    log.info("Scheduled RDS data downloads every " + intervalMillis + " " + TimeUnit.MILLISECONDS);
   }
 
   /**
