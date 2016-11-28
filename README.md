@@ -27,7 +27,7 @@ This file gets it's data atomically, so other processes can read from it all the
 
 ## Configuration Settings
 
-* `CoreServices.url` The url to connect for Selerity's CoreServices. 
+* `CoreServices.url` The url to connect for Selerity's CoreServices.
 * `CoreServices.user` The user used for CoreService authentication.
 * `CoreServices.password` The password used for CoreService authentication.
 * `RdsDataDownloader.fetcher.enumTypes` The Reference data `enumTypes` to fetch data for. E.g.: `PUBLIC_COMPANY` for
