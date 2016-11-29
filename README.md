@@ -7,6 +7,8 @@ Downloads data from RDS and stores it to disk.
 * [JavaDoc](#javadoc)
 * [Questions/Support](#questionssupport)
 
+[![Build Status](https://travis-ci.org/SelerityInc/RdsDataDownloader.svg?branch=master)](https://travis-ci.org/SelerityInc/RdsDataDownloader)
+
 ## Installation
 
 * Get Java 8
