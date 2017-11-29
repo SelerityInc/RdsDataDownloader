@@ -135,6 +135,38 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
   }
 
   @Test
+  public void testCatchOutOfMemoryError() throws Exception {
+    JsonObject rdsData = new JsonObject();
+    Throwable t = new OutOfMemoryError("catch me");
+    
+    expect(fetcher.fetch()).andAnswer(new IAnswer<JsonObject>() {
+      int count=0;
+      @Override
+      public JsonObject answer() throws Throwable {
+        if (count++ == 0) {
+          return rdsData;
+        }
+        throw t;
+      }}).times(2,5);
+    facet.setAppState(AppState.READY);
+    facet.setAppState(eq(AppState.FAULTY), anyString());
+
+    persister.persist(rdsData);
+
+    replayAll();
+
+    RdsDataLifecycle lifecycle = createRdsDataLifecycle();
+
+    lifecycle.start();
+
+    timeUtils.wallClockSleepForMillis(1000);
+
+    lifecycle.stop();
+
+    verifyAll();
+  }
+
+  @Test
   public void testCatchThrowable() throws Exception {
     JsonObject rdsData = new JsonObject();
     Throwable t = new Throwable("catch me");

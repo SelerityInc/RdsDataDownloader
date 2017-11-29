@@ -124,6 +124,12 @@ public class RdsDataLifecycle {
       String msg = "Downloading/Persisting data failed";
       log.error(msg, e);
       facet.setAppState(AppState.FAULTY, msg + ": " + e.toString());
+    } catch (OutOfMemoryError e) {
+      String msg = "Running out of memory during downloading/persisting. Please grant more heap "
+          + "to the JVM";
+      log.error(msg, e);
+      facet.setAppState(AppState.FAULTY, msg + ": " + e.toString());
+      throw e;
     } catch (Throwable e) {
       String msg = "Downloading/Persisting data failed";
       log.error(msg, e);
