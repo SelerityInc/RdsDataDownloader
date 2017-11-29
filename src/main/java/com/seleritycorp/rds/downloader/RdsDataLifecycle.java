@@ -124,6 +124,11 @@ public class RdsDataLifecycle {
       String msg = "Downloading/Persisting data failed";
       log.error(msg, e);
       facet.setAppState(AppState.FAULTY, msg + ": " + e.toString());
+    } catch (Throwable e) {
+      String msg = "Downloading/Persisting data failed";
+      log.error(msg, e);
+      facet.setAppState(AppState.FAULTY, msg + ": " + e.toString());
+      throw e;
     }
   }
 

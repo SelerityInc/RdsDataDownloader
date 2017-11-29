@@ -23,6 +23,7 @@ import static org.easymock.EasyMock.expectLastCall;
 
 import java.io.IOException;
 
+import org.easymock.IAnswer;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -119,6 +120,38 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
     expectLastCall().times(2, 5);
     persister.persist(rdsData);
     expectLastCall().times(2, 5);
+
+    replayAll();
+
+    RdsDataLifecycle lifecycle = createRdsDataLifecycle();
+
+    lifecycle.start();
+
+    timeUtils.wallClockSleepForMillis(1000);
+
+    lifecycle.stop();
+
+    verifyAll();
+  }
+
+  @Test
+  public void testCatchThrowable() throws Exception {
+    JsonObject rdsData = new JsonObject();
+    Throwable t = new Throwable("catch me");
+    
+    expect(fetcher.fetch()).andAnswer(new IAnswer<JsonObject>() {
+      int count=0;
+      @Override
+      public JsonObject answer() throws Throwable {
+        if (count++ == 0) {
+          return rdsData;
+        }
+        throw t;
+      }}).times(2,5);
+    facet.setAppState(AppState.READY);
+    facet.setAppState(eq(AppState.FAULTY), anyString());
+
+    persister.persist(rdsData);
 
     replayAll();
 
