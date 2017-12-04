@@ -22,7 +22,10 @@ Downloads data from RDS and stores it to disk.
 * Get the `jar` of `RdsDataDownloader` that you want to run (either by cloning this repo and running `mvn package`
   or fetch it from [Maven Central](https://repo1.maven.org/maven2/com/seleritycorp/rds/downloader/RdsDataDownloader))
   and store it into that directory.
-* Run `java -jar RdsDataDownloader-1.0.0.jar` (update the version number accordingly)
+* Run `java -jar RdsDataDownloader-1.0.0.jar` (update the version
+  number accordingly. When fetching huge datasets like
+  `FIXED_INCOME_INSTRUMENT`, increase JVM's available accordingly. For
+  examply by adding `-mx6g` to the command line.)
 
 `RdsDataDownloader` will download fresh RDS data and persist them to `data/rds/rds-data.json` every hour.
 This file gets it's data atomically, so other processes can read from it all the time.
