@@ -119,6 +119,7 @@ public class RdsDataLifecycle {
       } else {
         persister.persist(rdsData);
         facet.setAppState(AppState.READY);
+        log.info("Finisted persisting data");
       }
     } catch (Exception e) {
       String msg = "Downloading/Persisting data failed";
