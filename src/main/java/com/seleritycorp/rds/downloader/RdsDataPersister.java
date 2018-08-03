@@ -80,7 +80,7 @@ public class RdsDataPersister {
    * @throws IOException for errors while persisting.
    */
   public void persist(JsonObject rdsData) throws IOException {
-    log.info("Persisting RDS data to " + target);
+    log.info("Persisting RDS data to " + tmpTarget);
 
     // If we'd write to the target directly, another process might try to read the file while we
     // write it. That would give the client a broken Json. So we first write to a temporary file
@@ -101,6 +101,7 @@ public class RdsDataPersister {
     }
 
     // At this point, the Rds data has been persistent. Now moving it to the target path.
+    log.info("Moving RDS data to " + target);
 
     if (!Files.isDirectory(targetParent)) {
       try {
