@@ -22,6 +22,7 @@ import com.seleritycorp.common.base.config.ApplicationConfig;
 import com.seleritycorp.common.base.config.Config;
 import com.seleritycorp.common.base.config.ConfigUtils;
 import com.seleritycorp.common.base.coreservices.CallErrorException;
+import com.seleritycorp.common.base.http.client.HttpException;
 import com.seleritycorp.common.base.logging.Log;
 import com.seleritycorp.common.base.logging.LogFactory;
 import com.seleritycorp.common.base.state.AppState;
@@ -29,7 +30,6 @@ import com.seleritycorp.common.base.state.AppStatePushFacet;
 import com.seleritycorp.common.base.state.StateManager;
 import com.seleritycorp.common.base.time.TimeUtils;
 
-import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
@@ -39,7 +39,7 @@ import javax.inject.Inject;
 
 /**
  * Lifecycle manager for RDS data
- * 
+ *
  * <p>This class handles fetching and persisting of RDS data, and scheduling of thereof.
  */
 public class RdsDataLifecycle {
@@ -56,10 +56,10 @@ public class RdsDataLifecycle {
 
   /**
    * Creates a lifecycle handler for RDS data
-   * 
+   *
    * <p>The handler is initially stopped. You have to call {@link #start()} to acutally start the
    * handler's scheduling.
-   * 
+   *
    * @param sm The application's state manager to report to
    * @param appConfig The application config to use.
    * @param fetcher handler of single, plain fetches
@@ -82,14 +82,14 @@ public class RdsDataLifecycle {
 
   /**
    * Fetches RDS data and retry once if there are errors
-   * 
+   *
    * @return The fetched RDS data. null, if RDS could not get fetched.
    */
   private JsonObject fetch() {
     JsonObject rdsData = null;
     try {
       rdsData = fetcher.fetch();
-    } catch (IOException | CallErrorException e2) {
+    } catch (HttpException | CallErrorException e2) {
       String msg2 =
           "Fetching RDS data failed. Will rertry in " + retryPauseMillis / 1000 + " seconds";
       log.warn(msg2, e2);
@@ -100,7 +100,7 @@ public class RdsDataLifecycle {
 
       try {
         rdsData = fetcher.fetch();
-      } catch (IOException | CallErrorException e3) {
+      } catch (HttpException | CallErrorException e3) {
         String msg3 = "Fetching RDS data failed two times in a row";
         log.error(msg3, e3);
         facet.setAppState(AppState.FAULTY, msg3);

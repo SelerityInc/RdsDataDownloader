@@ -30,6 +30,7 @@ import org.junit.Test;
 import com.google.gson.JsonObject;
 import com.google.inject.Injector;
 import com.seleritycorp.common.base.coreservices.CallErrorException;
+import com.seleritycorp.common.base.http.client.HttpException;
 import com.seleritycorp.common.base.inject.InjectorFactory;
 import com.seleritycorp.common.base.state.AppState;
 import com.seleritycorp.common.base.state.AppStatePushFacet;
@@ -62,7 +63,7 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
   }
 
   @Test
-  public void testInitialRun() throws IOException, CallErrorException {
+  public void testInitialRun() throws IOException, CallErrorException, HttpException {
     JsonObject rdsData = new JsonObject();
 
     expect(fetcher.fetch()).andReturn(rdsData);
@@ -86,7 +87,7 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
   }
 
   @Test
-  public void testPlainScheduling() throws IOException, CallErrorException {
+  public void testPlainScheduling() throws IOException, CallErrorException, HttpException {
     JsonObject rdsData = new JsonObject();
 
     expect(fetcher.fetch()).andReturn(rdsData).times(4, 7);
@@ -109,7 +110,7 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
   }
 
   @Test
-  public void testFailingFetchThenRecovery() throws IOException, CallErrorException {
+  public void testFailingFetchThenRecovery() throws IOException, CallErrorException, HttpException {
     JsonObject rdsData = new JsonObject();
 
     expect(fetcher.fetch()).andReturn(null).times(2);
@@ -138,7 +139,7 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
   public void testCatchOutOfMemoryError() throws Exception {
     JsonObject rdsData = new JsonObject();
     Throwable t = new OutOfMemoryError("catch me");
-    
+
     expect(fetcher.fetch()).andAnswer(new IAnswer<JsonObject>() {
       int count=0;
       @Override
@@ -170,7 +171,7 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
   public void testCatchThrowable() throws Exception {
     JsonObject rdsData = new JsonObject();
     Throwable t = new Throwable("catch me");
-    
+
     expect(fetcher.fetch()).andAnswer(new IAnswer<JsonObject>() {
       int count=0;
       @Override
@@ -199,7 +200,7 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
   }
 
   @Test
-  public void testFetchRetry() throws IOException, CallErrorException {
+  public void testFetchRetry() throws IOException, CallErrorException, HttpException {
     CallErrorException thrownE = new CallErrorException("catch me");
 
     JsonObject rdsData = new JsonObject();

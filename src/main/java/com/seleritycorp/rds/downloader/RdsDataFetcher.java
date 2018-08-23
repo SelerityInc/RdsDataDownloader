@@ -23,9 +23,9 @@ import com.seleritycorp.common.base.config.ApplicationConfig;
 import com.seleritycorp.common.base.config.Config;
 import com.seleritycorp.common.base.coreservices.CallErrorException;
 import com.seleritycorp.common.base.coreservices.RefDataClient;
+import com.seleritycorp.common.base.http.client.HttpException;
 import com.seleritycorp.common.base.meta.MetaDataFormatter;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import javax.inject.Inject;
@@ -40,10 +40,10 @@ public class RdsDataFetcher {
 
   /**
    * Creates a fetcher of RDS data.
-   * 
+   *
    * @param appConfig The application config to use.
    * @param refDataClient The CoreService client for reference data.
-   * @param metaDataFormatter formats the agent for meta data. 
+   * @param metaDataFormatter formats the agent for meta data.
    */
   @Inject
   public RdsDataFetcher(@ApplicationConfig Config appConfig, RefDataClient refDataClient,
@@ -63,14 +63,14 @@ public class RdsDataFetcher {
 
   /**
    * Fetches RDS data.
-   * 
+   *
    * <p>If fetching fails, no re-tries are done.
-   * 
+   *
    * @return the fetched data
-   * @throws IOException for network or other IO issues occur.
+   * @throws HttpException for network or other IO issues occur.
    * @throws CallErrorException for server and semantics errors.
    */
-  public JsonObject fetch() throws IOException, CallErrorException {
+  public JsonObject fetch() throws CallErrorException, HttpException {
     JsonObject meta = new JsonObject();
     meta.addProperty("format", "RdsData");
     meta.addProperty("version", 2);

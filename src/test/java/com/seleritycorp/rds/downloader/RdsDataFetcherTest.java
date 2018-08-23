@@ -31,6 +31,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.seleritycorp.common.base.coreservices.CallErrorException;
 import com.seleritycorp.common.base.coreservices.RefDataClient;
+import com.seleritycorp.common.base.http.client.HttpException;
 import com.seleritycorp.common.base.meta.MetaDataFormatter;
 import com.seleritycorp.common.base.test.SettableConfig;
 
@@ -48,7 +49,7 @@ public class RdsDataFetcherTest extends EasyMockSupport {
   }
 
   @Test
-  public void testFetchNull() throws IOException, CallErrorException {
+  public void testFetchNull() throws CallErrorException, HttpException {
     replayAll();
 
     RdsDataFetcher fetcher = createRdsDataFetcher(null);
@@ -65,7 +66,7 @@ public class RdsDataFetcherTest extends EasyMockSupport {
   }
 
   @Test
-  public void testFetchEmpty() throws IOException, CallErrorException {
+  public void testFetchEmpty() throws CallErrorException, HttpException {
     replayAll();
 
     RdsDataFetcher fetcher = createRdsDataFetcher("");
@@ -82,7 +83,7 @@ public class RdsDataFetcherTest extends EasyMockSupport {
   }
 
   @Test
-  public void testFetchBlank() throws IOException, CallErrorException {
+  public void testFetchBlank() throws CallErrorException, HttpException {
     replayAll();
 
     RdsDataFetcher fetcher = createRdsDataFetcher("  ");
@@ -99,7 +100,7 @@ public class RdsDataFetcherTest extends EasyMockSupport {
   }
 
   @Test
-  public void testFetchSingle() throws IOException, CallErrorException {
+  public void testFetchSingle() throws CallErrorException, HttpException {
     JsonElement elementFoo = new JsonPrimitive(42);
     expect(refDataClient.getIdentifiersForEnumType("foo")).andReturn(elementFoo);
 
@@ -121,7 +122,7 @@ public class RdsDataFetcherTest extends EasyMockSupport {
   }
 
   @Test
-  public void testFetchMultiple() throws IOException, CallErrorException {
+  public void testFetchMultiple() throws CallErrorException, HttpException {
     JsonElement elementFoo = new JsonPrimitive(42);
     expect(refDataClient.getIdentifiersForEnumType("foo")).andReturn(elementFoo);
     JsonElement elementBar = new JsonPrimitive("baz");
@@ -146,7 +147,7 @@ public class RdsDataFetcherTest extends EasyMockSupport {
   }
 
   @Test
-  public void testFetchMix() throws IOException, CallErrorException {
+  public void testFetchMix() throws CallErrorException, HttpException {
     JsonElement elementFoo = new JsonPrimitive(42);
     expect(refDataClient.getIdentifiersForEnumType("foo")).andReturn(elementFoo);
     JsonElement elementBar = new JsonPrimitive("baz");

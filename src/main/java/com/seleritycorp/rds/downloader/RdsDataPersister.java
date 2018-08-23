@@ -35,7 +35,7 @@ import javax.inject.Inject;
 
 /**
  * Persists RDS data.
- * 
+ *
  * <p>To avoid having other processes read half-writted files, data first get written to a
  * temporary file. Once this temporary file has been fully written, the file is moved to the final
  * place in one atomic operation.
@@ -50,7 +50,7 @@ public class RdsDataPersister {
 
   /**
    * Creates a persister for RDS data.
-   * 
+   *
    * @param appConfig The application config to use.
    * @param appPaths The base paths to write data to.
    */
@@ -75,7 +75,7 @@ public class RdsDataPersister {
 
   /**
    * Persist data fetched from RDS
-   * 
+   *
    * @param rdsData the data to persist
    * @throws IOException for errors while persisting.
    */
