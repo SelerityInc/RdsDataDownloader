@@ -39,7 +39,7 @@ import javax.inject.Inject;
 /**
  * Persists RDS data.
  *
- * <p>To avoid having other processes read half-writted files, data first get written to a
+ * <p>To avoid having other processes read half-written files, data first get written to a
  * temporary file. Once this temporary file has been fully written, the file is moved to the final
  * place in one atomic operation.
  */

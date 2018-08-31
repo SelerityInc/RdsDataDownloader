@@ -16,22 +16,23 @@ Downloads data from RDS and stores it to disk.
 * `cd` into that directory. E.g.: `cd rds-data-downloader`
 * Put the sample config file from
   [sample-conf/application.properties](https://github.com/seleritycorp/RdsDataDownloader/tree/master/sample-conf/application.properties)
-  to `conf/application.properties`.
+  to `conf/application.properties`, or if you prefer to put it in another location,
+  then you need to pass it as command line argument using `--config <file>`.
 * Change `YOUR_USER` to your user name
 * Change `YOUR_PASSWORD` to your password
 * Get the `jar` of `RdsDataDownloader` that you want to run (either by cloning this repo and running `mvn package`
   or fetch it from [Maven Central](https://repo1.maven.org/maven2/com/seleritycorp/rds/downloader/RdsDataDownloader))
   and store it into that directory.
-* Run `java -jar RdsDataDownloader-1.0.0.jar` (update the version
-  number accordingly. When fetching huge datasets like
-  `FIXED_INCOME_INSTRUMENT`, increase JVM's available accordingly. For
-  examply by adding `-mx6g` to the command line.)
+* Run `java -Xmx256M -jar RdsDataDownloader-1.0.0.jar`, if your config file is in a custom location specify it with the option `--config <file>`
+ (update the version  number accordingly).
 
-`RdsDataDownloader` will download fresh RDS data and persist them to `data/rds/rds-data.json` every hour.
+`RdsDataDownloader` will download fresh RDS data and persist them to the configured `paths.data` folder every hour.
 This file gets it's data atomically, so other processes can read from it all the time.
 
 ## Configuration Settings
 
+* `paths.data` Folder where the data is stored. If not absolute, this path is relative to the working dir.
+* `paths.dataState` Folder where the app state is stored. If not absolute, this path is relative to `paths.data` dir.
 * `CoreServices.url` The url to connect for Selerity's CoreServices.
 * `CoreServices.user` The user used for CoreService authentication.
 * `CoreServices.password` The password used for CoreService authentication.
