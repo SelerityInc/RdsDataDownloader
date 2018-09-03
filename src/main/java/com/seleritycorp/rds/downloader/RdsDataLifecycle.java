@@ -16,8 +16,6 @@
 
 package com.seleritycorp.rds.downloader;
 
-import com.google.gson.JsonObject;
-
 import com.seleritycorp.common.base.config.ApplicationConfig;
 import com.seleritycorp.common.base.config.Config;
 import com.seleritycorp.common.base.config.ConfigUtils;
@@ -30,11 +28,14 @@ import com.seleritycorp.common.base.state.AppStatePushFacet;
 import com.seleritycorp.common.base.state.StateManager;
 import com.seleritycorp.common.base.time.TimeUtils;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.inject.Inject;
 
 /**
@@ -81,14 +82,12 @@ public class RdsDataLifecycle {
   }
 
   /**
-   * Fetches RDS data and retry once if there are errors
+   * Fetches RDS data and retry once if there are errors.
    *
-   * @return The fetched RDS data. null, if RDS could not get fetched.
    */
-  private JsonObject fetch() {
-    JsonObject rdsData = null;
+  private void fetch() throws IOException {
     try {
-      rdsData = fetcher.fetch();
+      fetcher.fetch(persister.getCleanWriter());
     } catch (HttpException | CallErrorException e2) {
       String msg2 =
           "Fetching RDS data failed. Will rertry in " + retryPauseMillis / 1000 + " seconds";
@@ -99,28 +98,22 @@ public class RdsDataLifecycle {
       timeUtils.sleepForMillis(retryPauseMillis);
 
       try {
-        rdsData = fetcher.fetch();
+        fetcher.fetch(persister.getCleanWriter());
       } catch (HttpException | CallErrorException e3) {
         String msg3 = "Fetching RDS data failed two times in a row";
         log.error(msg3, e3);
         facet.setAppState(AppState.FAULTY, msg3);
       }
     }
-    return rdsData;
   }
 
   private void singleRun() {
     log.info("Starting data fetch run");
     try {
-      JsonObject rdsData = fetch();
-
-      if (rdsData == null) {
-        facet.setAppState(AppState.FAULTY, "Failed to receive good RDS data");
-      } else {
-        persister.persist(rdsData);
-        facet.setAppState(AppState.READY);
-        log.info("Finisted persisting data");
-      }
+      fetch();
+      persister.persist();
+      facet.setAppState(AppState.READY);
+      log.info("Finisted persisting data");
     } catch (Exception e) {
       String msg = "Downloading/Persisting data failed";
       log.error(msg, e);

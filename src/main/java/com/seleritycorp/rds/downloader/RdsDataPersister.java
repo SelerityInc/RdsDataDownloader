@@ -25,7 +25,10 @@ import com.seleritycorp.common.base.config.ConfigUtils;
 import com.seleritycorp.common.base.logging.Log;
 import com.seleritycorp.common.base.logging.LogFactory;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,6 +50,7 @@ public class RdsDataPersister {
   private final Path targetParent;
   private final Path tmpTarget;
   private final Path tmpTargetParent;
+  private Writer tmpTargetWriter;
 
   /**
    * Creates a persister for RDS data.
@@ -74,18 +78,16 @@ public class RdsDataPersister {
   }
 
   /**
-   * Persist data fetched from RDS
+   * Retrieves the writer object to the temp file. Every time it's called, it
+   * returns the new writer i.e it wipes out the temp file and create new one
    *
-   * @param rdsData the data to persist
-   * @throws IOException for errors while persisting.
+   * @return Writer object
+   * @throws IOException while creating the writer object
    */
-  public void persist(JsonObject rdsData) throws IOException {
-    log.info("Persisting RDS data to " + tmpTarget);
-
-    // If we'd write to the target directly, another process might try to read the file while we
-    // write it. That would give the client a broken Json. So we first write to a temporary file
-    // and then move the data over atomically.
-
+  public Writer getCleanWriter() throws IOException {
+    if (tmpTargetWriter != null) {
+      tmpTargetWriter.close();
+    }
     if (!Files.isDirectory(tmpTargetParent)) {
       try {
         Files.createDirectories(tmpTargetParent);
@@ -93,14 +95,32 @@ public class RdsDataPersister {
         throw new IOException("Failed to create temporary target directory " + tmpTargetParent, e);
       }
     }
+    tmpTargetWriter = new BufferedWriter(
+            new OutputStreamWriter(
+                    Files.newOutputStream(tmpTarget),
+                    StandardCharsets.UTF_8),
+            16 * 1024 * 1024);
+    return tmpTargetWriter;
+  }
 
-    try {
-      Files.write(tmpTarget, rdsData.toString().getBytes(StandardCharsets.UTF_8));
-    } catch (IOException e) {
-      throw new IOException("Failed to write temporarty target " + tmpTarget, e);
+  /**
+   * Persist data fetched from RDS.
+   *
+   * @throws IOException for errors while persisting.
+   */
+  public void persist() throws Exception {
+    log.info("Persisting RDS data to " + tmpTarget);
+    if (this.tmpTargetWriter == null) {
+      throw new Exception(
+              "Writer is not initialized - Fetch the data into the writer before calling persist!");
     }
-
-    // At this point, the Rds data has been persistent. Now moving it to the target path.
+    this.tmpTargetWriter.flush();
+    this.tmpTargetWriter.close();
+    if (Files.isRegularFile(tmpTarget) && Files.size(tmpTarget) == 0) {
+      throw new Exception("Downloaded RDS data is empty!");
+    }
+    // At this point, the Rds data has been persistent.
+    // Now moving it to the target path, atomically.
     log.info("Moving RDS data to " + target);
 
     if (!Files.isDirectory(targetParent)) {
@@ -113,10 +133,10 @@ public class RdsDataPersister {
 
     try {
       Files.move(tmpTarget, target, StandardCopyOption.ATOMIC_MOVE,
-          StandardCopyOption.REPLACE_EXISTING);
+              StandardCopyOption.REPLACE_EXISTING);
     } catch (IOException e) {
       throw new IOException(
-          "Failed to move temporary target " + tmpTarget + " to effective target " + target);
+              "Failed to move temporary target " + tmpTarget + " to effective target " + target);
     }
   }
 }

@@ -18,6 +18,7 @@ package com.seleritycorp.rds.downloader;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonWriter;
 
 import com.seleritycorp.common.base.config.ApplicationConfig;
 import com.seleritycorp.common.base.config.Config;
@@ -26,6 +27,8 @@ import com.seleritycorp.common.base.coreservices.RefDataClient;
 import com.seleritycorp.common.base.http.client.HttpException;
 import com.seleritycorp.common.base.meta.MetaDataFormatter;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.LinkedList;
 import java.util.List;
 import javax.inject.Inject;
@@ -66,25 +69,32 @@ public class RdsDataFetcher {
    *
    * <p>If fetching fails, no re-tries are done.
    *
-   * @return the fetched data
+   * @param  writer Writer object to write the RDS data
    * @throws HttpException for network or other IO issues occur.
    * @throws CallErrorException for server and semantics errors.
    */
-  public JsonObject fetch() throws CallErrorException, HttpException {
-    JsonObject meta = new JsonObject();
-    meta.addProperty("format", "RdsData");
-    meta.addProperty("version", 2);
-    meta.addProperty("agent", agent);
-
-    JsonObject ret = new JsonObject();
-    ret.add("meta", meta);
-
-    JsonObject data = new JsonObject();
-    ret.add("data", data);
-    for (String enumType : enumTypes) {
-      JsonElement identifiers = refDataClient.getIdentifiersForEnumType(enumType);
-      data.add(enumType, identifiers);
+  public void fetch(Writer writer) throws CallErrorException, HttpException {
+    JsonWriter jsonWriter = new JsonWriter(writer);
+    try {
+      JsonObject meta = new JsonObject();
+      meta.addProperty("format", "RdsData");
+      meta.addProperty("version", 2);
+      meta.addProperty("agent", agent);
+      jsonWriter.beginObject();
+      jsonWriter.name("meta").beginObject();
+      jsonWriter.name("format").value("RdsData");
+      jsonWriter.name("version").value(2);
+      jsonWriter.name("agent").value(agent);
+      jsonWriter.endObject();
+      jsonWriter.name("data").beginObject();
+      for (String enumType : enumTypes) {
+        jsonWriter.name(enumType);
+        refDataClient.getIdentifiersForEnumType(enumType, jsonWriter);
+      }
+      jsonWriter.endObject();
+      jsonWriter.endObject();
+    } catch (IOException e) {
+      throw new HttpException("Failed while writing the response ", e);
     }
-    return ret;
   }
 }

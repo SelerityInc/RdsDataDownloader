@@ -17,18 +17,21 @@
 package com.seleritycorp.rds.downloader;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.*;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 
+import com.google.gson.*;
+import com.google.gson.stream.JsonWriter;
+import org.easymock.EasyMock;
 import org.easymock.EasyMockSupport;
+import org.easymock.IAnswer;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import com.seleritycorp.common.base.coreservices.CallErrorException;
 import com.seleritycorp.common.base.coreservices.RefDataClient;
 import com.seleritycorp.common.base.http.client.HttpException;
@@ -39,12 +42,14 @@ public class RdsDataFetcherTest extends EasyMockSupport {
   SettableConfig config;
   RefDataClient refDataClient;
   MetaDataFormatter metaDataFormatter;
+  Writer writer;
 
   @Before
   public void setUp() throws IOException {
     config = new SettableConfig();
     refDataClient = createMock(RefDataClient.class);
     metaDataFormatter = createMock(MetaDataFormatter.class);
+    this.writer = new StringWriter();
     expect(metaDataFormatter.getUserAgent()).andReturn("quux").once();
   }
 
@@ -53,10 +58,11 @@ public class RdsDataFetcherTest extends EasyMockSupport {
     replayAll();
 
     RdsDataFetcher fetcher = createRdsDataFetcher(null);
-    JsonObject fetchedData = fetcher.fetch();
+    fetcher.fetch(writer);
 
     verifyAll();
 
+    JsonObject fetchedData = new JsonParser().parse(writer.toString()).getAsJsonObject();
     assertThat(fetchedData).isNotNull();
 
     verifyMeta(fetchedData);
@@ -70,10 +76,11 @@ public class RdsDataFetcherTest extends EasyMockSupport {
     replayAll();
 
     RdsDataFetcher fetcher = createRdsDataFetcher("");
-    JsonObject fetchedData = fetcher.fetch();
+    fetcher.fetch(writer);
 
     verifyAll();
 
+    JsonObject fetchedData = new JsonParser().parse(writer.toString()).getAsJsonObject();
     assertThat(fetchedData).isNotNull();
 
     verifyMeta(fetchedData);
@@ -87,10 +94,11 @@ public class RdsDataFetcherTest extends EasyMockSupport {
     replayAll();
 
     RdsDataFetcher fetcher = createRdsDataFetcher("  ");
-    JsonObject fetchedData = fetcher.fetch();
+    fetcher.fetch(writer);
 
     verifyAll();
 
+    JsonObject fetchedData = new JsonParser().parse(writer.toString()).getAsJsonObject();
     assertThat(fetchedData).isNotNull();
 
     verifyMeta(fetchedData);
@@ -102,15 +110,23 @@ public class RdsDataFetcherTest extends EasyMockSupport {
   @Test
   public void testFetchSingle() throws CallErrorException, HttpException {
     JsonElement elementFoo = new JsonPrimitive(42);
-    expect(refDataClient.getIdentifiersForEnumType("foo")).andReturn(elementFoo);
+    refDataClient.getIdentifiersForEnumType(eq("foo"), anyObject(JsonWriter.class));
+    expectLastCall().andAnswer(new IAnswer<Object>() {
+      @Override
+      public Object answer() throws Throwable {
+        ((JsonWriter) EasyMock.getCurrentArguments()[1]).value(elementFoo.getAsNumber());
+        return null;
+      }
+    });
 
     replayAll();
 
     RdsDataFetcher fetcher = createRdsDataFetcher("foo");
-    JsonObject fetchedData = fetcher.fetch();
+    fetcher.fetch(writer);
 
     verifyAll();
 
+    JsonObject fetchedData = new JsonParser().parse(writer.toString()).getAsJsonObject();
     assertThat(fetchedData).isNotNull();
 
     verifyMeta(fetchedData);
@@ -124,17 +140,32 @@ public class RdsDataFetcherTest extends EasyMockSupport {
   @Test
   public void testFetchMultiple() throws CallErrorException, HttpException {
     JsonElement elementFoo = new JsonPrimitive(42);
-    expect(refDataClient.getIdentifiersForEnumType("foo")).andReturn(elementFoo);
+    refDataClient.getIdentifiersForEnumType(eq("foo"), anyObject(JsonWriter.class));
+    expectLastCall().andAnswer(new IAnswer<Object>() {
+      @Override
+      public Object answer() throws Throwable {
+        ((JsonWriter) EasyMock.getCurrentArguments()[1]).value(elementFoo.getAsNumber());
+        return null;
+      }
+    });
     JsonElement elementBar = new JsonPrimitive("baz");
-    expect(refDataClient.getIdentifiersForEnumType("bar")).andReturn(elementBar);
+    refDataClient.getIdentifiersForEnumType(eq("bar"), anyObject(JsonWriter.class));
+    expectLastCall().andAnswer(new IAnswer<Object>() {
+      @Override
+      public Object answer() throws Throwable {
+        ((JsonWriter) EasyMock.getCurrentArguments()[1]).value(elementBar.getAsString());
+        return null;
+      }
+    });
 
     replayAll();
 
     RdsDataFetcher fetcher = createRdsDataFetcher("foo,bar");
-    JsonObject fetchedData = fetcher.fetch();
+    fetcher.fetch(writer);
 
     verifyAll();
 
+    JsonObject fetchedData = new JsonParser().parse(writer.toString()).getAsJsonObject();
     assertThat(fetchedData).isNotNull();
 
     verifyMeta(fetchedData);
@@ -149,17 +180,32 @@ public class RdsDataFetcherTest extends EasyMockSupport {
   @Test
   public void testFetchMix() throws CallErrorException, HttpException {
     JsonElement elementFoo = new JsonPrimitive(42);
-    expect(refDataClient.getIdentifiersForEnumType("foo")).andReturn(elementFoo);
+    refDataClient.getIdentifiersForEnumType(eq("foo"), anyObject(JsonWriter.class));
+    expectLastCall().andAnswer(new IAnswer<Object>() {
+      @Override
+      public Object answer() throws Throwable {
+        ((JsonWriter) EasyMock.getCurrentArguments()[1]).value(elementFoo.getAsNumber());
+        return null;
+      }
+    });
     JsonElement elementBar = new JsonPrimitive("baz");
-    expect(refDataClient.getIdentifiersForEnumType("bar")).andReturn(elementBar);
+    refDataClient.getIdentifiersForEnumType(eq("bar"), anyObject(JsonWriter.class));
+    expectLastCall().andAnswer(new IAnswer<Object>() {
+      @Override
+      public Object answer() throws Throwable {
+        ((JsonWriter) EasyMock.getCurrentArguments()[1]).value(elementBar.getAsString());
+        return null;
+      }
+    });
 
     replayAll();
 
     RdsDataFetcher fetcher = createRdsDataFetcher(",   foo  ,, bar,,,");
-    JsonObject fetchedData = fetcher.fetch();
+    fetcher.fetch(writer);
 
     verifyAll();
 
+    JsonObject fetchedData = new JsonParser().parse(writer.toString()).getAsJsonObject();
     assertThat(fetchedData).isNotNull();
 
     verifyMeta(fetchedData);

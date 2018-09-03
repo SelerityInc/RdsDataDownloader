@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2017 Selerity, Inc. (support@seleritycorp.com)
+ * Copyright (C) 2016-2018 Selerity, Inc. (support@seleritycorp.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,14 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.easymock.EasyMock.expect;
 
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonWriter;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -58,7 +61,7 @@ public class RdsDataPersisterTest extends FileTestCase {
   }
 
   @Test
-  public void testPersistOk() throws IOException {
+  public void testPersistOk() throws Exception {
     JsonObject meta = new JsonObject();
     meta.addProperty("version", 2);
 
@@ -70,10 +73,14 @@ public class RdsDataPersisterTest extends FileTestCase {
     rdsData.add("meta", meta);
     rdsData.add("data", data);
 
+
     replayAll();
 
     RdsDataPersister persister = createRdsDataPersister();
-    persister.persist(rdsData);
+    Writer writer = persister.getCleanWriter();
+    JsonWriter jsonWriter = new JsonWriter(writer);
+    new Gson().toJson(rdsData, jsonWriter);
+    persister.persist();
 
     verifyAll();
 
@@ -83,17 +90,31 @@ public class RdsDataPersisterTest extends FileTestCase {
   }
 
   @Test
-  public void testPersistTmpTargetParentIsFile() throws IOException {
-    JsonObject rdsData = new JsonObject();
-
-    Files.createFile(defaultTmpTarget.getParent());
-
+  public void testPersistThrowingExceptionIfWriterUninitialized() throws Exception {
+    Files.createDirectories(defaultTmpTarget.getParent());
     replayAll();
 
     RdsDataPersister persister = createRdsDataPersister();
 
     try {
-      persister.persist(rdsData);
+      persister.persist();
+      failBecauseExceptionWasNotThrown(Exception.class);
+    } catch (Exception e) {
+      assertThat(e).hasMessageContaining("Writer is not initialized - Fetch the data into the writer before calling persist!");
+    }
+
+    verifyAll();
+  }
+
+  @Test
+  public void testPersistTmpTargetParentIsFile() throws Exception {
+    Files.createFile(defaultTmpTarget.getParent());
+
+    replayAll();
+
+    RdsDataPersister persister = createRdsDataPersister();
+    try {
+      persister.getCleanWriter();
       failBecauseExceptionWasNotThrown(IOException.class);
     } catch (IOException e) {
       assertThat(e).hasMessageContaining(defaultTmpTarget.getParent().toString());
@@ -103,9 +124,7 @@ public class RdsDataPersisterTest extends FileTestCase {
   }
 
   @Test
-  public void testPersistTmpTargetIsDirectory() throws IOException {
-    JsonObject rdsData = new JsonObject();
-
+  public void testPersistTmpTargetIsDirectory() throws Exception {
     Files.createDirectories(defaultTmpTarget.getParent());
     Files.createDirectories(defaultTmpTarget);
 
@@ -114,7 +133,7 @@ public class RdsDataPersisterTest extends FileTestCase {
     RdsDataPersister persister = createRdsDataPersister();
 
     try {
-      persister.persist(rdsData);
+      persister.getCleanWriter();
       failBecauseExceptionWasNotThrown(IOException.class);
     } catch (IOException e) {
       assertThat(e).hasMessageContaining(defaultTmpTarget.toString());
@@ -124,9 +143,7 @@ public class RdsDataPersisterTest extends FileTestCase {
   }
 
   @Test
-  public void testPersistTargetParentIsFile() throws IOException {
-    JsonObject rdsData = new JsonObject();
-
+  public void testPersistTargetParentIsFile() throws Exception {
     Files.createFile(defaultTarget.getParent());
 
     replayAll();
@@ -134,7 +151,7 @@ public class RdsDataPersisterTest extends FileTestCase {
     RdsDataPersister persister = createRdsDataPersister();
 
     try {
-      persister.persist(rdsData);
+      persister.getCleanWriter();
       failBecauseExceptionWasNotThrown(IOException.class);
     } catch (IOException e) {
       assertThat(e).hasMessageContaining(defaultTarget.getParent().toString());
@@ -144,18 +161,18 @@ public class RdsDataPersisterTest extends FileTestCase {
   }
 
   @Test
-  public void testPersistTargetIsDirectory() throws IOException {
-    JsonObject rdsData = new JsonObject();
-
+  public void testPersistTargetIsDirectory() throws Exception {
     Files.createDirectories(defaultTarget.getParent());
     Files.createDirectories(defaultTarget);
 
     replayAll();
 
     RdsDataPersister persister = createRdsDataPersister();
+    Writer writer = persister.getCleanWriter();
+    writer.write("test");
 
     try {
-      persister.persist(rdsData);
+      persister.persist();
       failBecauseExceptionWasNotThrown(IOException.class);
     } catch (IOException e) {
       assertThat(e).hasMessageContaining(defaultTarget.toString());
@@ -165,9 +182,7 @@ public class RdsDataPersisterTest extends FileTestCase {
   }
 
   @Test
-  public void testPersistOverwriting() throws IOException {
-    JsonObject rdsData = new JsonObject();
-
+  public void testPersistOverwriting() throws Exception {
     Files.createDirectories(defaultTmpTarget.getParent());
     Files.write(defaultTmpTarget, "foo".getBytes(StandardCharsets.UTF_8));
     try {
@@ -181,13 +196,31 @@ public class RdsDataPersisterTest extends FileTestCase {
     replayAll();
 
     RdsDataPersister persister = createRdsDataPersister();
-
-    persister.persist(rdsData);
+    Writer writer = persister.getCleanWriter();
+    JsonWriter jsonWriter = new JsonWriter(writer);
+    new Gson().toJson(new JsonObject(), jsonWriter);
+    persister.persist();
 
     verifyAll();
 
     assertThat(defaultTarget).hasContent("{}");
     assertThat(defaultTmpTarget).doesNotExist();
+  }
+
+  @Test
+  public void testNotPersistingEmptyData() throws Exception {
+    replayAll();
+
+    RdsDataPersister persister = createRdsDataPersister();
+    try {
+      persister.getCleanWriter();
+      persister.persist();
+      failBecauseExceptionWasNotThrown(Exception.class);
+    } catch (Exception e) {
+      assertThat(e).hasMessageContaining("Downloaded RDS data is empty!");
+    }
+
+    verifyAll();
   }
 
   private RdsDataPersister createRdsDataPersister() {

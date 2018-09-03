@@ -22,6 +22,7 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.expectLastCall;
 
 import java.io.IOException;
+import java.io.Writer;
 
 import org.easymock.IAnswer;
 import org.junit.Before;
@@ -30,7 +31,6 @@ import org.junit.Test;
 import com.google.gson.JsonObject;
 import com.google.inject.Injector;
 import com.seleritycorp.common.base.coreservices.CallErrorException;
-import com.seleritycorp.common.base.http.client.HttpException;
 import com.seleritycorp.common.base.inject.InjectorFactory;
 import com.seleritycorp.common.base.state.AppState;
 import com.seleritycorp.common.base.state.AppStatePushFacet;
@@ -46,16 +46,18 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
   StateManager sm;
   SettableConfig config;
   AppStatePushFacet facet;
+  Writer writer;
 
   @Before
-  public void setup() {
+  public void setup() throws IOException {
     Injector injector = InjectorFactory.getInjector();
     timeUtils = injector.getInstance(TimeUtilsSettableClock.class);
-
     fetcher = createMock(RdsDataFetcher.class);
     persister = createMock(RdsDataPersister.class);
+    writer = createMock(Writer.class);
     facet = createMock(AppStatePushFacet.class);
     sm = createMock(StateManager.class);
+    expect(persister.getCleanWriter()).andReturn(writer).anyTimes();
     expect(sm.createRegisteredAppStatePushFacet("RdsDataDownloader")).andReturn(facet);
     config = new SettableConfig();
     config.set("RdsDataDownloader.lifecycle.interval", "200");
@@ -63,11 +65,10 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
   }
 
   @Test
-  public void testInitialRun() throws IOException, CallErrorException, HttpException {
-    JsonObject rdsData = new JsonObject();
-
-    expect(fetcher.fetch()).andReturn(rdsData);
-    persister.persist(rdsData);
+  public void testInitialRun() throws Exception {
+    fetcher.fetch(writer);
+    expectLastCall().once();
+    persister.persist();
     expectLastCall().once();
     facet.setAppState(AppState.READY);
     expectLastCall().once();
@@ -87,40 +88,13 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
   }
 
   @Test
-  public void testPlainScheduling() throws IOException, CallErrorException, HttpException {
-    JsonObject rdsData = new JsonObject();
-
-    expect(fetcher.fetch()).andReturn(rdsData).times(4, 7);
-    persister.persist(rdsData);
+  public void testPlainScheduling() throws Exception {
+    fetcher.fetch(writer);
+    expectLastCall().times(4, 7);
+    persister.persist();
     expectLastCall().times(4, 7);
     facet.setAppState(AppState.READY);
     expectLastCall().times(4, 7);
-
-    replayAll();
-
-    RdsDataLifecycle lifecycle = createRdsDataLifecycle();
-
-    lifecycle.start();
-
-    timeUtils.wallClockSleepForMillis(1000);
-
-    lifecycle.stop();
-
-    verifyAll();
-  }
-
-  @Test
-  public void testFailingFetchThenRecovery() throws IOException, CallErrorException, HttpException {
-    JsonObject rdsData = new JsonObject();
-
-    expect(fetcher.fetch()).andReturn(null).times(2);
-    expect(fetcher.fetch()).andReturn(rdsData).times(2, 5);
-    facet.setAppState(eq(AppState.FAULTY), anyString());
-    expectLastCall().times(2);
-    facet.setAppState(AppState.READY);
-    expectLastCall().times(2, 5);
-    persister.persist(rdsData);
-    expectLastCall().times(2, 5);
 
     replayAll();
 
@@ -137,22 +111,22 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
 
   @Test
   public void testCatchOutOfMemoryError() throws Exception {
-    JsonObject rdsData = new JsonObject();
     Throwable t = new OutOfMemoryError("catch me");
 
-    expect(fetcher.fetch()).andAnswer(new IAnswer<JsonObject>() {
+    fetcher.fetch(writer);
+    expectLastCall().andAnswer(new IAnswer<JsonObject>() {
       int count=0;
       @Override
       public JsonObject answer() throws Throwable {
         if (count++ == 0) {
-          return rdsData;
+          return null;
         }
         throw t;
       }}).times(2,5);
     facet.setAppState(AppState.READY);
     facet.setAppState(eq(AppState.FAULTY), anyString());
 
-    persister.persist(rdsData);
+    persister.persist();
 
     replayAll();
 
@@ -169,22 +143,22 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
 
   @Test
   public void testCatchThrowable() throws Exception {
-    JsonObject rdsData = new JsonObject();
     Throwable t = new Throwable("catch me");
 
-    expect(fetcher.fetch()).andAnswer(new IAnswer<JsonObject>() {
+    fetcher.fetch(writer);
+    expectLastCall().andAnswer(new IAnswer<JsonObject>() {
       int count=0;
       @Override
       public JsonObject answer() throws Throwable {
         if (count++ == 0) {
-          return rdsData;
+          return null;
         }
         throw t;
       }}).times(2,5);
     facet.setAppState(AppState.READY);
     facet.setAppState(eq(AppState.FAULTY), anyString());
 
-    persister.persist(rdsData);
+    persister.persist();
 
     replayAll();
 
@@ -200,14 +174,14 @@ public class RdsDataLifecycleTest extends InjectingTestCase {
   }
 
   @Test
-  public void testFetchRetry() throws IOException, CallErrorException, HttpException {
+  public void testFetchRetry() throws Exception {
     CallErrorException thrownE = new CallErrorException("catch me");
 
-    JsonObject rdsData = new JsonObject();
-
-    expect(fetcher.fetch()).andThrow(thrownE);
-    expect(fetcher.fetch()).andReturn(rdsData);
-    persister.persist(rdsData);
+    fetcher.fetch(writer);
+    expectLastCall().andThrow(thrownE);
+    fetcher.fetch(writer);
+    expectLastCall().once();
+    persister.persist();
     expectLastCall().once();
     facet.setAppState(eq(AppState.WARNING), anyString());
     facet.setAppState(AppState.READY);
