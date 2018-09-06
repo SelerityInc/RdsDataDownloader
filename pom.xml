@@ -27,7 +27,7 @@
 
   <groupId>com.seleritycorp.rds.downloader</groupId>
   <artifactId>RdsDataDownloader</artifactId>
-  <version>1.0.4-SNAPSHOT</version>
+  <version>1.0.4</version>
   <packaging>jar</packaging>
 
   <name>Rds Data Downloader</name>
@@ -46,7 +46,7 @@
     -->
     <connection>scm:git:github.com:SelerityInc/${project.artifactId}.git</connection>
     <developerConnection>scm:git:git@github.com:SelerityInc/${project.artifactId}.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>v1.0.4</tag>
     <url>https://github.com/SelerityInc/${project.artifactId}</url>
   </scm>
 
