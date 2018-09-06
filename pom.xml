@@ -22,7 +22,7 @@
   <parent>
     <groupId>com.seleritycorp.pom</groupId>
     <artifactId>ApplicationBasePom</artifactId>
-    <version>1.0.11</version>
+    <version>1.0.13</version>
   </parent>
 
   <groupId>com.seleritycorp.rds.downloader</groupId>
