@@ -84,8 +84,9 @@ public class RdsDataLifecycle {
   /**
    * Fetches RDS data and retry once if there are errors.
    *
+   * @throws IOException while obtaining the writer object
    */
-  private void fetch() throws IOException {
+  private void fetch() throws Exception {
     try {
       fetcher.fetch(persister.getCleanWriter());
     } catch (HttpException | CallErrorException e2) {
@@ -103,6 +104,7 @@ public class RdsDataLifecycle {
         String msg3 = "Fetching RDS data failed two times in a row";
         log.error(msg3, e3);
         facet.setAppState(AppState.FAULTY, msg3);
+        throw e3;
       }
     }
   }
