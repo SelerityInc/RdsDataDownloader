@@ -33,6 +33,8 @@ This file gets it's data atomically, so other processes can read from it all the
 
 * `paths.data` Folder where the data is stored. If not absolute, this path is relative to the working dir.
 * `paths.dataState` Folder where the app state is stored. If not absolute, this path is relative to `paths.data` dir.
+* `RdsDataDownloader.persister.target` File where fetched data is persisted.
+  If not absolute, this file is relative to `paths.data` dir. Will be created if does not exists.
 * `CoreServices.url` The url to connect for Selerity's CoreServices.
 * `CoreServices.user` The user used for CoreService authentication.
 * `CoreServices.password` The password used for CoreService authentication.
